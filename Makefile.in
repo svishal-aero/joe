@@ -1,0 +1,5 @@
+CC =mpicxx
+
+CFLAGS = -I/home/svishal/Codes/joe_lean/externals/petsc_install/include -O3 -fPIC -libverbs -fpermissive -std=c++11 -Wno-format -Wl,--no-undefined -DMPI_OFFSET_IS_LONG_LONG_INT -DWITH_PARMETIS -DNO_ASSERT -DWITH_PETSC
+
+CLIBS = -L/home/svishal/Codes/joe_lean/externals/petsc_install/lib -Wl,-rpath=/home/svishal/Codes/joe_lean/externals/petsc_install/lib -lColPack -ladolc -lmetis -lparmetis -lpetsc

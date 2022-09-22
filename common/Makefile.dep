@@ -1,0 +1,31 @@
+# Include files <file.h> dependencies for common files
+
+myMem_H                 = $(JOE_HOME)/common/include/myMem.h
+
+MpiStuff_H              = $(JOE_HOME)/common/include/MpiStuff.h
+
+Gp_H                    = $(JOE_HOME)/common/include/Gp.h            $(MpiStuff_H)
+
+MiscUtils_H             = $(JOE_HOME)/common/include/MiscUtils.h     $(MpiStuff_H)
+
+Ugp_H                   = $(JOE_HOME)/common/include/Ugp.h           $(MpiStuff_H) $(MiscUtils_H) $(Gp_H)
+
+Param_H                 = $(JOE_HOME)/common/include/Param.h         $(MiscUtils_H)
+
+Adt_H                   = $(JOE_HOME)/common/include/Adt.h
+
+Average_H               = $(JOE_HOME)/common/include/Average.h       $(MpiStuff_H)
+
+UgpWithTools_H          = $(JOE_HOME)/common/include/UgpWithTools.h  $(Ugp_H) $(Param_H) $(Adt_H) $(Average_H)
+
+MshFilter_H             = $(JOE_HOME)/common/include/MshFilter.h     $(MiscUtils_H) $(Ugp_H)
+
+tc_vec3d_H              = $(JOE_HOME)/common/include/tc_vec3d.h
+
+UgpWithCv2_H            = $(JOE_HOME)/common/include/UgpWithCv2.h    $(UgpWithTools_H) $(CdpFilter_H) $(MshFilter_H) $(tc_vec3d_H)
+
+AtmosphericCond_H       = $(JOE_HOME)/common/include/AtmosphericCond.h
+
+PetscSolver_H           = $(JOE_HOME)/common/include/PetscSolver.h 
+
+CTR_TOMMIETOO_LOGGING_H = $(JOE_HOME)/common/include/Logging.h
