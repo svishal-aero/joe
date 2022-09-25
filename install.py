@@ -4,23 +4,16 @@
 # "python install.py purge" will remove all build files and external dependencies (petsc, etc.)
 
 import os, sys
+from shutil import which
 from subprocess import call as subp_call
 
 def call(cmd):
     subp_call(cmd, shell=True)
 
 
-def getCC():
-    #return which('mpicxx')
-    return 'mpicxx'
-
-
-def getCFLAGS(petsc_include):
+def getCFLAGS():
     cflags  = ''
-    cflags += ' -I'+petsc_include
     cflags += ' -O3'
-    cflags += ' -fPIC'
-    cflags += ' -libverbs'
     cflags += ' -fpermissive'
     cflags += ' -std=c++11'
     cflags += ' -Wno-format'
@@ -32,34 +25,17 @@ def getCFLAGS(petsc_include):
     return cflags
 
 
-def getCLIBS(petsc_lib):
-    clibs  = ''
-    clibs += ' -L'+petsc_lib
-    clibs += ' -Wl,-rpath='+petsc_lib
-    clibs += ' -lColPack'
-    clibs += ' -ladolc'
-    clibs += ' -lmetis'
-    clibs += ' -lparmetis'
-    clibs += ' -lpetsc'
-    return clibs
-
-
-def write_joecxx(joeHome, petsc_include, petsc_lib):
+def write_joecxx(joeHome):
 
     call('rm -f joecxx')
 
     includes  = ''
     includes += ' -I'+os.path.join(joeHome, 'joe', 'include')
-    includes += ' -I'+os.path.join(joeHome, 'common', 'include')
-    includes += getCFLAGS(petsc_include)
+    includes += getCFLAGS()
 
     libs  = ''
-    libs += getCLIBS(petsc_lib)
-    libs += ' -L'+os.path.join(joeHome, 'common', 'lib')
-    libs += ' -Wl,-rpath='+os.path.join(joeHome, 'common', 'lib')
-    libs += ' -lJoeCommon'
-    libs += ' -L'+os.path.join(joeHome, 'joe', 'lib')
-    libs += ' -Wl,-rpath='+os.path.join(joeHome, 'joe', 'lib')
+    libs += ' -L'+os.path.join(joeHome, 'install', 'lib')
+    libs += ' -Wl,-rpath='+os.path.join(joeHome, 'install', 'lib')
     libs += ' -lJoe'
 
     with open('joecxx', 'w') as f:
@@ -83,9 +59,7 @@ def install():
 
     os.chdir(joeHome)
 
-    petsc_dir     = os.path.join(joeHome, 'externals', 'petsc_install')
-    petsc_lib     = os.path.join(petsc_dir, 'lib')
-    petsc_include = os.path.join(petsc_dir, 'include')
+    petsc_dir = os.path.join(joeHome, 'externals', 'petsc_install')
 
     if not os.path.exists(petsc_dir):
         print()
@@ -96,59 +70,90 @@ def install():
         call('python install.py')
         os.chdir('..')
 
-    with open('Makefile.in', 'w') as f:
-        print()
-        print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        print(r' JOE INSTALLER: Writing "Makefile.in"')
-        print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        f.write('CC =%s' % getCC())
-        f.write('\n\nCFLAGS =%s' % getCFLAGS(petsc_include))
-        f.write('\n\nCLIBS =%s' % getCLIBS(petsc_lib))
-
     print()
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    print(r' JOE INSTALLER: Calling "make"')
+    print(r' JOE INSTALLER: Building using meson')
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    call('make -j')
+    if not os.path.exists('meson.build'):
+        with open('meson.build', 'w') as f:
+            f.write("project('joe', 'cpp')\n\n")
+
+            f.write("sources_joe = [\n")
+            f.write("  'common/src/Gp.cpp',\n")
+            f.write("  'common/src/Logging.cpp',\n")
+            f.write("  'common/src/MiscUtils.cpp',\n")
+            f.write("  'common/src/MpiStuff.cpp',\n")
+            f.write("  'common/src/MshFilter.cpp',\n")
+            f.write("  'common/src/Param.cpp',\n")
+            f.write("  'common/src/tc_vec3d.cpp',\n")
+            f.write("  'common/src/Ugp.cpp',\n")
+            f.write("  'common/src/UgpWithCv2.cpp',\n")
+            f.write("  'common/src/UgpWithTools.cpp',\n")
+            f.write("  'joe/src/JoeWithModels.cpp',\n")
+            f.write("  'joe/src/JoeWithModelsAD.cpp',\n")
+            f.write("  'joe/src/UgpWithCvCompFlow.cpp',\n")
+            f.write("  'joe/src/UgpWithCvCompFlowAD.cpp',\n")
+            f.write("  'joe/src/Scalars.cpp',\n")
+            f.write("  'joe/src/ScalarsAD.cpp'\n")
+            f.write("]\n\n")
+
+            f.write("cxx = meson.get_compiler('cpp')\n\n")
+
+            f.write("libPath = '"+petsc_dir+"/lib'\n")
+
+            f.write("colpack  = cxx.find_library('ColPack', dirs: [libPath])\n")
+            f.write("adolc    = cxx.find_library('adolc', dirs: [libPath])\n")
+            f.write("parmetis = cxx.find_library('parmetis', dirs: [libPath])\n")
+            f.write("petsc    = cxx.find_library('petsc', dirs: [libPath])\n\n")
+
+            f.write("deps = [colpack, adolc, parmetis, petsc]\n\n")
+
+            f.write("flags = [\n")
+            f.write("  '-I"+petsc_dir+"/include',\n")
+            f.write("  '-O3',\n")
+            f.write("  '-fPIC',\n")
+            f.write("  '-libverbs',\n")
+            f.write("  '-fpermissive',\n")
+            f.write("  '-std=c++11',\n")
+            f.write("  '-Wno-format',\n")
+            f.write("  '-Wl,--no-undefined',\n")
+            f.write("  '-DMPI_OFFSET_IS_LONG_LONG_INT',\n")
+            f.write("  '-DNO_ASSERT',\n")
+            f.write("  '-DWITH_PARMETIS',\n")
+            f.write("  '-DWITH_PETSC',\n")
+            f.write("]\n\n")
+
+            f.write("joe = shared_library('Joe', sources_joe,\n")
+            f.write("                     cpp_args: flags,\n")
+            f.write("                     dependencies: deps,\n")
+            f.write("                     install: true,\n")
+            f.write("                     install_dir: 'lib',\n")
+            f.write("                     install_rpath: libPath)\n")
+
+    if not os.path.exists('build'):
+        call('CXX=mpicxx meson setup build --prefix='+joeHome+'/install')
+    call('meson compile -C build')
+    call('meson install -C build --only-changed')
 
     print()
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     print(r' JOE INSTALLER: Creating "joecxx"')
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    write_joecxx(joeHome, petsc_include, petsc_lib)
+    write_joecxx(joeHome)
     os.chdir(os.path.join(homeDir, 'bin'))
     call('rm -f joecxx')
-    call('ln -s '+os.path.join(joeHome,'joecxx')+' .')
+    call('ln -s '+os.path.join(joeHome, 'joecxx')+' .')
 
     os.chdir(workDir)
 
 
 def clean():
 
-    workDir = os.getcwd()
-    joeHome = os.path.dirname(os.path.abspath(__file__))
-
-    petsc_dir     = os.path.join(joeHome, 'externals', 'petsc_install')
-    petsc_lib     = os.path.join(petsc_dir, 'lib')
-    petsc_include = os.path.join(petsc_dir, 'include')
-
-    if not os.path.exists('Makefile.in'):
-        with open('Makefile.in', 'w') as f:
-            print()
-            print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-            print(r' JOE INSTALLER: Writing "Makefile.in"')
-            print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-            f.write('CC =%s' % getCC())
-            f.write('\n\nCFLAGS =%s' % getCFLAGS(petsc_include))
-            f.write('\n\nCLIBS =%s' % getCLIBS(petsc_lib))
-
     print()
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    print(r' JOE INSTALLER: Calling "make clean"')
+    print(r' JOE INSTALLER: Removing "build" and "install" directories')
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    os.chdir(joeHome)
-    call('make clean')
-    os.chdir(workDir)
+    call('rm -rf build install')
 
 
 def purge():
@@ -160,12 +165,6 @@ def purge():
     os.chdir(joeHome)
 
     clean()
-
-    print()
-    print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    print(r' JOE INSTALLER: Removing "Makefile.in"')
-    print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    call('rm -f Makefile.in')
 
     print()
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
@@ -189,6 +188,8 @@ def purge():
 
 if __name__=='__main__':
 
+    assert(which('mpicxx') is not None)
+    assert(which('meson') is not None)
     if len(sys.argv)==1:       install()
     elif sys.argv[1]=='purge': purge()
     elif sys.argv[1]=='clean': clean()

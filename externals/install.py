@@ -9,7 +9,7 @@ def getOptions():
     options = []
     options.extend(sys.argv[1:])
     if len(options)==0:
-        options.extend(['download', 'configure', 'make', 'install'])
+        options.extend(['download', 'configure', 'make', 'install', 'metis', 'parmetis'])
     return options
 
 def getMpiDir():
@@ -50,8 +50,9 @@ if __name__=='__main__':
         config_cmd += ' --download-colpack=1'
         config_cmd += ' --download-adolc=1'
         config_cmd += ' --download-f2cblaslapack=1'
-        config_cmd += ' --download-metis=1'
-        config_cmd += ' --download-parmetis=1'
+        #config_cmd += ' --download-metis=1'
+        #config_cmd += ' --download-parmetis=1'
+        config_cmd += ' --with-fc=0'
         print('Running command: '+config_cmd)
         call(config_cmd)
 
@@ -62,3 +63,21 @@ if __name__=='__main__':
         call('make install')
     
     os.chdir(workDir)
+
+    if 'metis' in options:
+        os.chdir(thisDir)
+        call('tar -xzvf metis-5.1.0.tar.gz')
+        os.chdir('metis-5.1.0')
+        call('make config shared=1 prefix='+prefixDir)
+        call('make -j')
+        call('make install')
+        os.chdir(workDir)
+
+    if 'parmetis' in options:
+        os.chdir(thisDir)
+        call('tar -xzvf parmetis-4.0.3.tar.gz')
+        os.chdir('parmetis-4.0.3')
+        call('make config shared=1 prefix='+prefixDir)
+        call('make -j')
+        call('make install')
+        os.chdir(workDir)
