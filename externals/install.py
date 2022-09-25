@@ -9,7 +9,7 @@ def getOptions():
     options = []
     options.extend(sys.argv[1:])
     if len(options)==0:
-        options.extend(['download', 'configure', 'make', 'install', 'metis', 'parmetis'])
+        options.extend(['petsc', 'metis', 'parmetis'])
     return options
 
 def getMpiDir():
@@ -26,43 +26,21 @@ if __name__=='__main__':
     options   = getOptions()
 
     mpiDir    = getMpiDir()
-    homeDir   = os.environ['HOME']
     workDir   = os.getcwd()
     thisDir   = os.path.dirname(os.path.abspath(__file__))
-    petscDir  = os.path.join(thisDir, 'petsc')
-    prefixDir = os.path.join(thisDir, 'petsc_install')
+    prefixDir = os.path.join(thisDir, 'opt')
 
     call('mkdir -p '+os.path.basename(prefixDir))
     call('rm -rf '+os.path.join(prefixDir,'*'))
 
-    os.chdir(thisDir)
-    
-    if 'download' in options:
-        if not os.path.exists(petscDir):
-            call('git clone -b release https://gitlab.com/petsc/petsc.git petsc')
-
-    os.chdir(petscDir)
-    
-    if 'configure' in options:
-        config_cmd  = './configure'
-        config_cmd += ' --prefix='+prefixDir
-        config_cmd += ' --with-mpi-dir='+mpiDir
-        config_cmd += ' --download-colpack=1'
-        config_cmd += ' --download-adolc=1'
-        config_cmd += ' --download-f2cblaslapack=1'
-        #config_cmd += ' --download-metis=1'
-        #config_cmd += ' --download-parmetis=1'
-        config_cmd += ' --with-fc=0'
-        print('Running command: '+config_cmd)
-        call(config_cmd)
-
-    if 'make' in options:   
+    if 'petsc' in options:
+        os.chdir(thisDir)
+        call('tar -xzvf petsc-3.17.tar.gz')
+        os.chdir('petsc-3.17.4')
+        call('./configure --prefix='+prefixDir+' --with-mpi-dir='+mpiDir+' --download-colpack=1 --download-adolc=1 --download-f2cblaslapack=1 --with-fc=0')
         call('make')
-
-    if 'install' in options:
         call('make install')
-    
-    os.chdir(workDir)
+        os.chdir(workDir)
 
     if 'metis' in options:
         os.chdir(thisDir)
