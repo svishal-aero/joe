@@ -1,6 +1,7 @@
-/build
-/install
+/build/
+/install/
 /joecxx
-/externals/petsc*
+/externals/petsc/
+/externals/petsc-install/
 /externals/parmetis-4.0.3/
 /externals/metis-5.1.0/
