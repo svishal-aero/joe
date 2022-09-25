@@ -1,6 +1,7 @@
 /build/
 /install/
 /joecxx
+/meson.build
 /externals/opt/
 /externals/petsc-3.17.4/
 /externals/parmetis-4.0.3/

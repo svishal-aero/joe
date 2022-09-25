@@ -59,9 +59,9 @@ def install():
 
     os.chdir(joeHome)
 
-    petsc_dir = os.path.join(joeHome, 'externals', 'petsc_install')
+    opt_dir = os.path.join(joeHome, 'externals', 'opt')
 
-    if not os.path.exists(petsc_dir):
+    if not os.path.exists(opt_dir):
         print()
         print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
         print(r' JOE INSTALLER: Installing external packages')
@@ -72,7 +72,7 @@ def install():
 
     print()
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    print(r' JOE INSTALLER: Building using meson')
+    print(r' JOE INSTALLER: Writing meson.build file')
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     if not os.path.exists('meson.build'):
         with open('meson.build', 'w') as f:
@@ -99,18 +99,20 @@ def install():
 
             f.write("cxx = meson.get_compiler('cpp')\n\n")
 
-            f.write("libPath = '"+petsc_dir+"/lib'\n")
+            f.write("libPath = '"+opt_dir+"/lib'\n")
 
-            f.write("colpack  = cxx.find_library('ColPack', dirs: [libPath])\n")
-            f.write("adolc    = cxx.find_library('adolc', dirs: [libPath])\n")
+            f.write("colpack  = cxx.find_library('ColPack',  dirs: [libPath])\n")
+            f.write("adolc    = cxx.find_library('adolc',    dirs: [libPath])\n")
+            f.write("metis    = cxx.find_library('metis',    dirs: [libPath])\n")
             f.write("parmetis = cxx.find_library('parmetis', dirs: [libPath])\n")
-            f.write("petsc    = cxx.find_library('petsc', dirs: [libPath])\n\n")
+            f.write("petsc    = cxx.find_library('petsc',    dirs: [libPath])\n\n")
 
             f.write("deps = [colpack, adolc, parmetis, petsc]\n\n")
 
             f.write("flags = [\n")
-            f.write("  '-I"+petsc_dir+"/include',\n")
+            f.write("  '-I"+opt_dir+"/include',\n")
             f.write("  '-O3',\n")
+            f.write("  '-w',\n")
             f.write("  '-fPIC',\n")
             f.write("  '-libverbs',\n")
             f.write("  '-fpermissive',\n")
@@ -168,11 +170,16 @@ def purge():
 
     print()
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    print(r' JOE INSTALLER: Removing meson.build file')
+    print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    call('rm -f meson.build')
+
+    print()
+    print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     print(r' JOE INSTALLER: Removing external packages')
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     os.chdir('externals')
-    call('rm -rf petsc*')
-    call('rm -rf parmetis-4.0.3 metis-5.1.0')
+    call('rm -rf parmetis-4.0.3 metis-5.1.0 petsc-3.17.4')
     os.chdir('..')
 
     print()
