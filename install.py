@@ -172,6 +172,7 @@ def purge():
     print(r'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     os.chdir('externals')
     call('rm -rf petsc*')
+    call('rm -rf parmetis-4.0.3 metis-5.1.0')
     os.chdir('..')
 
     print()

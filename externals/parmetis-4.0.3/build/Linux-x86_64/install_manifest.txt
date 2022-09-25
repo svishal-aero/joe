@@ -1,6 +1,0 @@
-/home/svishal/Git/joe/externals/petsc_install/include/parmetis.h
-/home/svishal/Git/joe/externals/petsc_install/lib/libparmetis.so
-/home/svishal/Git/joe/externals/petsc_install/bin/ptest
-/home/svishal/Git/joe/externals/petsc_install/bin/mtest
-/home/svishal/Git/joe/externals/petsc_install/bin/parmetis
-/home/svishal/Git/joe/externals/petsc_install/bin/pometis
